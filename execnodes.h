@@ -1118,7 +1118,7 @@ typedef struct HashJoinState
 	List	   *hashclauses;	/* list of ExprState nodes */
 	HashJoinTable inner_hj_HashTable; /*New Added CSI3130*/
 	HashJoinTable outer_hj_HashTable; /*New Added CSI3130*/
-	unit332     inner_hj_HashTable; /*Modified CSI3130*/
+	uint32     inner_hj_CurHashValue; /*Modified CSI3130*/
 	uint32		outer_hj_CurHashValue; /*Modified CSI3130*/
 	int			inner_hj_CurBucketNo; /*Modified CSI3130*/
 	int			outer_hj_CurBucketNo; /*Modified CSI3130*/
