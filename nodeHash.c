@@ -71,6 +71,7 @@ ExecHash(HashState *node)
 	hashkeys = node->hashkeys;
 	eContext = node->ps.ps_ExprContext;
 	
+	
 	//CSI3130 get the first tuple from the outerNode
 	slot = ExecProcNode(outerNode);
 
@@ -807,21 +808,18 @@ ExecScanHashBucket(HashJoinState *hjstate,
 				   ExprContext *eContext)
 {
 	List	   *hjclauses = hjstate->hashclauses;
-	// HashJoinTable hashtable = hjstate->outer_hj_HashTable;
-	// HashJoinTuple hashTuple = hjstate->outer_hj_CurTuple;
-	// uint32		hashvalue = hjstate->inner_hj_CurHashValue;
 
 	/*
 	 * hj_CurTuple is NULL to start scanning a new bucket, or the address of
 	 * the last tuple returned from the current bucket.
 	 */
-	//CSI3130 probing inner
+	//CSI3130 Probing Inner or Outer Hash Table
 	
 	if (hjstate->isNextFetchInner) {  //CSI3130 check if next fetch is inner
 		
 		//CSI3130 set variables
-		HashJoinTable hashtable = hjstate->inner_hj_HashTable;
 		HashJoinTuple hashTuple = hjstate->inner_hj_CurTuple;
+		HashJoinTable hashtable = hjstate->inner_hj_HashTable;
 		uint32 hashvalue = hjstate->outer_hj_CurHashValue;
 
 
@@ -833,10 +831,10 @@ ExecScanHashBucket(HashJoinState *hjstate,
 		}
 
 		//CSI3130 while hashTuple is not empty
-		while (hashTuple != NULL)
-		{
-			if (hashTuple->hashvalue == hashvalue)
-			{
+		while (hashTuple != NULL){
+
+			if (hashTuple->hashvalue == hashvalue){
+
 				HeapTuple	heapTuple = &hashTuple->htup;
 				TupleTableSlot *inntuple;
 
@@ -850,8 +848,9 @@ ExecScanHashBucket(HashJoinState *hjstate,
 				/* reset temp memory each time to avoid leaks from qual expr */
 				ResetExprContext(eContext);
 
-				if (ExecQual(hjclauses, eContext, false))
-				{
+
+				if (ExecQual(hjclauses, eContext, false)){
+
 					hjstate->inner_hj_CurTuple = hashTuple;
 					return heapTuple;
 				}
@@ -871,23 +870,25 @@ ExecScanHashBucket(HashJoinState *hjstate,
 
 	//CSI3130 if next fetch if outer
 	else {
-		HashJoinTable hashtable = hjstate->outer_hj_HashTable;
-		HashJoinTuple hashTuple = hjstate->outer_hj_CurTuple;
-		uint32 hashvalue = hjstate->inner_hj_CurHashValue;
 
+		HashJoinTuple hashTuple = hjstate->outer_hj_CurTuple;
+		HashJoinTable hashtable = hjstate->outer_hj_HashTable;
+		uint32 hashvalue = hjstate->inner_hj_CurHashValue;
 
 
 		if (hashTuple == NULL)
 			hashTuple = hashtable->buckets[hjstate->outer_hj_CurBucketNo];
+
 		else
 			hashTuple = hashTuple->next;
 
 
+
 		//while the hashTuple is not empty
-		while (hashTuple != NULL)
-		{
-			if (hashTuple->hashvalue == hashvalue)
-			{
+		while (hashTuple != NULL){
+
+			if (hashTuple->hashvalue == hashvalue){
+
 				HeapTuple	heapTuple = &hashTuple->htup;
 				TupleTableSlot* outtuple;
 
@@ -905,8 +906,7 @@ ExecScanHashBucket(HashJoinState *hjstate,
 
 				//			printf("outer attrs in probeouter =%d\n",hjstate->inner_hj_HashTupleSlot->tts_tupleDescriptor->natts);
 
-				if (ExecQual(hjclauses, eContext, false))
-				{
+				if (ExecQual(hjclauses, eContext, false)){
 					hjstate->outer_hj_CurTuple = hashTuple;
 					return heapTuple;
 				}
