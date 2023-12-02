@@ -1500,10 +1500,10 @@ create_hashjoin_plan(PlannerInfo *root,
 							  joinclauses,
 							  otherclauses,
 							  hashclauses,
-							  outer_plan,
+							  //outer_plan,
 							  (Plan *) hash_plan,
 							  // CSI3530 //CSI3130 ...
-							  (Plan*)outer_hash_plan, // new added CSI3130
+							  (Plan*) outer_hash_plan, // new added CSI3130
 							  best_path->jpath.jointype);
 
 	copy_path_costsize(&join_plan->join.plan, &best_path->jpath.path);
