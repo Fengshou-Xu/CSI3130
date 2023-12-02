@@ -816,8 +816,6 @@ ExecScanHashBucket(HashJoinState *hjstate,
 	 * the last tuple returned from the current bucket.
 	 */
 	//CSI3130 probing inner
-
-	List* hjclauses = hjstate->hashclauses;
 	
 	if (hjstate->isNextFetchInner) {  //CSI3130 check if next fetch is inner
 		
@@ -828,7 +826,7 @@ ExecScanHashBucket(HashJoinState *hjstate,
 
 
 		if (hashTuple == NULL)
-			hashTuple = hashtable->buckets[hjstate->hj_CurBucketNo];
+			hashTuple = hashtable->buckets[hjstate->inner_hj_CurBucketNo];
 
 		else{
 			hashTuple = hashTuple->next;
@@ -854,7 +852,7 @@ ExecScanHashBucket(HashJoinState *hjstate,
 
 				if (ExecQual(hjclauses, eContext, false))
 				{
-					hjstate->hj_CurTuple = hashTuple;
+					hjstate->inner_hj_CurTuple = hashTuple;
 					return heapTuple;
 				}
 			}
