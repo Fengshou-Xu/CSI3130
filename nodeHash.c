@@ -842,7 +842,7 @@ ExecScanHashBucket(HashJoinState *hjstate,
 
 				/* insert hashtable's tuple into exec slot so ExecQual sees it */
 				inntuple = ExecStoreTuple(heapTuple,
-										hjstate->hj_HashTupleSlot,
+										hjstate->inner_hj_HashTupleSlot,
 										InvalidBuffer,
 										false);	/* do not pfree */
 				eContext->ecxt_innertuple = inntuple;
