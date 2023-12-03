@@ -674,15 +674,15 @@ ExecEndHashJoin(HashJoinState *node)
 	/*
 	 * Free hash table
 	 */
-	if (node->hj_InnerHashTable) //CSI3130
+	if (node->inner_hj_HashTable) //CSI3130
 	{
-		ExecHashTableDestroy(node->hj_InnerHashTable);
-		node->hj_InnerHashTable = NULL;
+		ExecHashTableDestroy(node->inner_hj_HashTable);
+		node->inner_hj_HashTable = NULL;
 	}
-	if (node->hj_OuterHashTable) //CSI3130
+	if (node->outer_hj_HashTable) //CSI3130
 	{
-		ExecHashTableDestroy(node->hj_OuterHashTable); //CSI3130
-		node->hj_OuterHashTable = NULL; //CSI3130
+		ExecHashTableDestroy(node->outer_hj_HashTable); //CSI3130
+		node->outer_hj_HashTable = NULL; //CSI3130
 	}
 
 	/*
@@ -694,11 +694,11 @@ ExecEndHashJoin(HashJoinState *node)
 	 * clean out the tuple table
 	 */
 	ExecClearTuple(node->js.ps.ps_ResultTupleSlot);
-	ExecClearTuple(node->hj_OuterTupleSlot);
-	ExecClearTuple(node->hj_InnerTupleSlot);// CSI3130
+	ExecClearTuple(node->outer_hj_HashTupleSlot);
+	ExecClearTuple(node->inner_hj_HashTupleSlot);// CSI3130
 	// CSI3530 and CSI3130 ...
-	ExecClearTuple(node->hj_InnerHashTupleSlot); //CSI3130
-	ExecClearTuple(node->hj_OuterHashTupleSlot); //CSI3130
+	ExecClearTuple(node->inner_hj_HashTupleSlot); //CSI3130
+	ExecClearTuple(node->outer_hj_HashTupleSlot); //CSI3130
 
 	/*
 	 * clean up subtrees
@@ -723,7 +723,7 @@ ExecHashJoinOuterGetTuple(PlanState *outerNode,
 						  HashJoinState *hjstate,
 						  uint32 *hashvalue)
 {
-	HashJoinTable hashtable = hjstate->hj_HashTable;
+	HashJoinTable hashtable = hjstate->inner_hj_HashTable;
 	int			curbatch = hashtable->curbatch;
 	TupleTableSlot *slot;
 
@@ -793,7 +793,7 @@ ExecHashJoinOuterGetTuple(PlanState *outerNode,
 static int
 ExecHashJoinNewBatch(HashJoinState *hjstate)
 {
-	HashJoinTable hashtable = hjstate->hj_HashTable;
+	HashJoinTable hashtable = hjstate->inner_hj_HashTable;
 	int			nbatch;
 	int			curbatch;
 	BufFile    *innerFile;
@@ -878,7 +878,7 @@ start_over:
 		while ((slot = ExecHashJoinGetSavedTuple(hjstate,
 												 innerFile,
 												 &hashvalue,
-												 hjstate->hj_HashTupleSlot)))
+												 hjstate->inner_hj_HashTupleSlot))) //3130
 		{
 			/*
 			 * NOTE: some tuples may be sent to future batches.  Also, it is
@@ -1012,9 +1012,9 @@ ExecReScanHashJoin(HashJoinState *node, ExprContext *exprCtxt)
 	 * inner subnode, then we can just re-use the existing hash table without
 	 * rebuilding it.
 	 */
-	if (node->hj_HashTable != NULL)
+	if (node->inner_hj_HashTable != NULL) //3130
 	{
-		if (node->hj_HashTable->nbatch == 1 &&
+		if (node->inner_hj_HashTable->nbatch == 1 && //3130
 			((PlanState *) node)->righttree->chgParam == NULL)
 		{
 			/*
@@ -1034,8 +1034,8 @@ ExecReScanHashJoin(HashJoinState *node, ExprContext *exprCtxt)
 		else
 		{
 			/* must destroy and rebuild hash table */
-			ExecHashTableDestroy(node->hj_HashTable);
-			node->hj_HashTable = NULL;
+			ExecHashTableDestroy(node->inner_hj_HashTable);
+			node->inner_hj_HashTable = NULL;
 
 			/*
 			 * if chgParam of subnode is not null then plan will be re-scanned
