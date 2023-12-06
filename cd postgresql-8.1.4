@@ -1,0 +1,6 @@
+cd postgresql-8.1.4
+./configure --prefix=/opt/postgresql --enable-debug -enable-depend CC="gcc -fno-aggressive-loop-optimizations" --disable-spinlocks
+
+
+wget -O config/config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'
+wget -O config/config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
