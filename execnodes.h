@@ -1182,9 +1182,9 @@ typedef struct HashJoinState//CSI3130
     bool        hj_MatchedOuter;
     bool        hj_InnerNotEmpty; //CSI3130 new added Inner 
     bool        hj_OuterNotEmpty;
-    bool        hj_fetchingFromInner; //CSI3130 if tuple fetched from inner relation, true
-    int         hj_foundByProbingInner; //CSI3130 the amount of tuples found by probing inner relation
-    int         hj_foundByProbingOuter; //CSI3130 the amount of tuples found by probing outer relation
+	int matches_by_probing_inner;  // add amount of tuples probe inner
+	int matches_by_probing_outer;   // add amount of tuples probe outer
+	bool isNextFetchInner;   //add 	
 } HashJoinState;
 
 
