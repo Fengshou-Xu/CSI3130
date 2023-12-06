@@ -770,11 +770,8 @@ typedef struct PlanState
 	/*
 	 * Other run-time state needed by most if not all node types.
 	 */
-
 	TupleTableSlot *ps_OuterTupleSlot;	/* slot for current "outer" tuple */
-    TupleTableSlot *ps_InnerTupleSlot; //*CSI3130Project slot for current "inner" tuple 
-
-
+	TupleTableSlot *ps_InnerTupleSlot;	/* CSI3530 / CSI3130 -slot for current "INNER" tuple */
 	TupleTableSlot *ps_ResultTupleSlot; /* slot for my result tuples */
 	ExprContext *ps_ExprContext;	/* node's expression-evaluation context */
 	ProjectionInfo *ps_ProjInfo;	/* info for doing tuple projection */
@@ -1085,63 +1082,27 @@ typedef struct MergeJoinState
 	ExprContext *mj_InnerEContext;
 } MergeJoinState;
 
-//CSI3130 : Modified to support keeping track of both inner and outer hash tables
 /* ----------------
  *	 HashJoinState information
  *
- *		hj_HashTable_inner		Inner hash table for the hashjoin
- *								(NULL if table not built yet) /o
- *		hj_HashTable_outer		Outer hash table for the hashjoin
+ *		hj_HashTable			hash table for the hashjoin
  *								(NULL if table not built yet)
- *
- *		hj_CurHashValue_outer	hash value for current outer tuple/o
- *		hj_CurHashValue_inner	hash value for current inner tuple
- *
- *
- *		hj_CurBucketNo_outer	regular bucket# for current outer tuple /o
- *		hj_CurBucketNo_inner	regular bucket# for current inner tuple
- *
- *		hj_CurSkewBucketNo_outer skew bucket# for current outer tuple /o
- *		hj_CurSkewBucketNo_inner skew bucket# for current inner tuple
- *
- *		hj_CurTuple_lastinnermatchedtocurrentouter
- *								last inner tuple matched to current outer
+ *		hj_CurHashValue			hash value for current outer tuple
+ *		hj_CurBucketNo			bucket# for current outer tuple
+ *		hj_CurTuple				last inner tuple matched to current outer
  *								tuple, or NULL if starting search
- *								(hj_CurXXX variables are undefined if
- *								OuterTupleSlot is empty!)
- *
- *		hj_CurTuple_lastoutermatchedtocurrentinner
- *								last outer tuple matched to current inner
- *								tuple, or NULL if starting search
- *								(hj_CurXXX variables are undefined if
- *								OuterTupleSlot is empty!)
- *
+ *								(CurHashValue, CurBucketNo and CurTuple are
+ *								 undefined if OuterTupleSlot is empty!)
  *		hj_OuterHashKeys		the outer hash keys in the hashjoin condition
  *		hj_InnerHashKeys		the inner hash keys in the hashjoin condition
- *
  *		hj_HashOperators		the join operators in the hashjoin condition
- *
- *		hj_OuterTupleSlot		tuple slot for outer tuples /o
- *		hj_InnerTupleSlot		tuple slot for inner tuples
- *
+ *		hj_OuterTupleSlot		tuple slot for outer tuples
  *		hj_HashTupleSlot		tuple slot for hashed tuples
- *
  *		hj_NullInnerTupleSlot	prepared null tuple for left outer joins
  *		hj_FirstOuterTupleSlot	first tuple retrieved from outer plan
- *
  *		hj_NeedNewOuter			true if need new outer tuple on next call
- *      hj_NeedNewInner			true if need new inner tuple on next call
- *
  *		hj_MatchedOuter			true if found a join match for current outer
- *		hj_Matchedinner			true if found a join match for current inner
- *
- *		hj_OuterNotEmpty		true if outer relation known not empty (true if outer is not empty)
- *		hj_innerNotEmpty		true if inner relation known not empty
- *
- *		hj_fetchingFromInner 	true if we fetched tuple from inner relation
- *
- *		hj_foundByProbingInner  number of tuples found by probing inner relation
- * 		hj_foundByProbingOuter
+ *		hj_OuterNotEmpty		true if outer relation known not empty
  * ----------------
  */
 
@@ -1149,42 +1110,45 @@ typedef struct MergeJoinState
 typedef struct HashJoinTupleData *HashJoinTuple;
 typedef struct HashJoinTableData *HashJoinTable;
 
-typedef struct HashJoinState//CSI3130
+// CSI3530 Beaucoup de modifications a faire ici 
+// CSI3130 You've got to make some serious changes here
+typedef struct HashJoinState
 {
 	JoinState	js;				/* its first field is NodeTag */
 	List	   *hashclauses;	/* list of ExprState nodes */
-	
-    HashJoinTable hj_InnerHashTable; //CSI3130 Supporting bi-directional probing by modify inner Hash Table
-    HashJoinTable hj_OuterHashTable; //CSI3130 same as inner Hash Table
-    uint32		hj_InnerCurHashValue; //CSI3130 change hj_CurHashValue into Inner and Outer
-    uint32		hj_OuterCurHashValue; //CSI3130 
-    int			hj_InnerCurBucketNo; //CSI3130 change hj_CurBucketNo into Inner and Outer
-    int			hj_OuterCurBucketNo; //CSI3130 
-    HashJoinTuple hj_InnerCurTuple; //CSI3130 change hj_CurTuple into Inner and Outer
-    HashJoinTuple hj_OuterCurTuple; //CSI3130 
-	
+	HashJoinTable inner_hj_HashTable; /*New Added CSI3130*/
+	HashJoinTable outer_hj_HashTable; /*New Added CSI3130*/
+	uint32     inner_hj_CurHashValue; /*Modified CSI3130*/
+	uint32		outer_hj_CurHashValue; /*Modified CSI3130*/
+	int			inner_hj_CurBucketNo; /*Modified CSI3130*/
+	int			outer_hj_CurBucketNo; /*Modified CSI3130*/
+	HashJoinTuple inner_hj_CurTuple; /*Modified CSI3130*/
+	HashJoinTuple outer_hj_CurTuple; /*Modified CSI3130*/
+
+
+
+	List	   *hj_OuterHashKeys;		/* list of ExprState nodes */
 	List	   *hj_InnerHashKeys;		/* list of ExprState nodes */
-    List	   *hj_OuterHashKeys;		/* list of ExprState nodes */
-    List	   *hj_HashOperators;		/* list of operator OIDs */
-	
-    TupleTableSlot *hj_InnerTupleSlot; //CSI3130 new added Inner Tuple Slot
-    TupleTableSlot *hj_OuterTupleSlot;
-	TupleTableSlot *hj_InnerHashTupleSlot; //CSI3130 change *hj_HashTupleSlot into inner and outer
-    TupleTableSlot *hj_OuterHashTupleSlot; //CSI3130 new added Outer Hash Tuple Slot
-    TupleTableSlot *hj_NullInnerTupleSlot;
-    TupleTableSlot *hj_FirstInnerTupleSlot; //CSI3130 new added for Inner
-    TupleTableSlot *hj_FirstOuterTupleSlot;
-    
-    bool        hj_innerExhausted; //CSI3130 new added hj_inner and outer Exhausted variale
-    bool        hj_outerExhausted; //CSI3130
-    bool        hj_NeedNewInner; //CSI3130 new added Inner
-    bool        hj_NeedNewOuter;
-    bool        hj_MatchedOuter;
-    bool        hj_InnerNotEmpty; //CSI3130 new added Inner 
-    bool        hj_OuterNotEmpty;
-	int matches_by_probing_inner;  // add amount of tuples probe inner
-	int matches_by_probing_outer;   // add amount of tuples probe outer
-	bool isNextFetchInner;   //add 	
+	List	   *hj_HashOperators;		/* list of operator OIDs */
+	TupleTableSlot *hj_OuterTupleSlot;
+	TupleTableSlot *hj_InnerTupleSlot; /*New Added CSI3130*/
+	TupleTableSlot *inner_hj_HashTupleSlot; /*Modified CSI3130*/
+	TupleTableSlot *outer_hj_HashTupleSlot; /*Modified CSI3130*/
+	TupleTableSlot *hj_NullInnerTupleSlot;
+	TupleTableSlot *hj_FirstOuterTupleSlot;
+	TupleTableSlot *hj_FirstInnerterTupleSlot; /*New Added CSI3130*/
+	bool        inner_exhausted;   /*New Added CSI3130*/
+	bool        outer_exhausted;   /*New Added CSI3130*/
+	bool		hj_NeedNewOuter;
+	bool		hj_NeedNewInner;   /*New Added CSI3130*/
+	bool		hj_MatchedOuter;
+	bool		hj_OuterNotEmpty;
+	bool		hj_InnerNotEmpty;  /*New Added CSI3130*/
+
+
+	int matches_by_probing_inner;  /*New Added CSI3130*/
+	int matches_by_probing_outer;   /*New Added CSI3130*/
+	bool isNextFetchInner;  /*New Added CSI3130*/
 } HashJoinState;
 
 
