@@ -1099,6 +1099,7 @@ typedef struct MergeJoinState
  *		hj_OuterTupleSlot		tuple slot for outer tuples
  *		hj_HashTupleSlot		tuple slot for hashed tuples
  *		hj_NullInnerTupleSlot	prepared null tuple for left outer joins
+ 		hj_FirstInnerTupleSlot
  *		hj_FirstOuterTupleSlot	first tuple retrieved from outer plan
  *		hj_NeedNewOuter			true if need new outer tuple on next call
  *		hj_MatchedOuter			true if found a join match for current outer
@@ -1135,6 +1136,7 @@ typedef struct HashJoinState
 	TupleTableSlot *inner_hj_HashTupleSlot; /*Modified CSI3130*/
 	TupleTableSlot *outer_hj_HashTupleSlot; /*Modified CSI3130*/
 	TupleTableSlot *hj_NullInnerTupleSlot;
+	TupleTableSlot *hj_FirstInnerTupleSlot;  //Modified CSI3130
 	TupleTableSlot *hj_FirstOuterTupleSlot;
 	TupleTableSlot *hj_FirstInnerterTupleSlot; /*New Added CSI3130*/
 	bool        inner_exhausted;   /*New Added CSI3130*/

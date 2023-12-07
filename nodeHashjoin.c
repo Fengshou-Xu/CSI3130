@@ -449,7 +449,7 @@ ExecHashJoin(HashJoinState *node)
 			}
 			node->hj_NeedNewInner = true;
 			node->js.ps.ps_InnerTupleSlot = NULL;
-			node-isNextFetchInner=false;
+			node->isNextFetchInner=false;
 			continue;
 		}
 		
